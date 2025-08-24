@@ -5,7 +5,7 @@ on:
     branches: [master]  # Запускать только при пуше в ветку master
 
 jobs:
-  build:
+  test-build:
     runs-on: ubuntu-latest  # Используем GitHub-hosted runner с Ubuntu
 
     steps:
@@ -29,6 +29,11 @@ jobs:
       - name: Docker Push
         run: docker push ${{ secrets.DOCKER_USER }}/dovops-node-starter:${{ github.sha }}
 
+  deploy:
+    needs: test-build
+    runs-on: ubuntu-latest
+
+    steps:
       - name: Deploy over SSH
         uses: appleboy/ssh-action@v0.1.6
         with:
