@@ -5,30 +5,30 @@ on:
     branches: [master]  # Запускать только при пуше в ветку master
 
 jobs:
+  checks:
+    uses: ./.github/workflows/pr-check.yaml
+
   build:
+    needs: checks
     runs-on: ubuntu-latest  # Используем GitHub-hosted runner с Ubuntu
 
     steps:
-      - uses: actions/checkout@v3  # Клонирует код из репозитория
-
-      - name: Установка зависимостей
-        run: npm ci
-
-      - name: Линтинг
-        run: npm run lint
-
-      - name: Тестирование
-        run: npm run test
+      - uses: actions/checkout@v3
 
       - name: Сборка
-        run: docker build -t ${{ secrets.DOCKER_USER }}/dovops-node-starter:${{ github.sha }} .
+        run: docker build -t ${{ secrets.DOCKER_USER }}/devops-node-starter:${{ github.sha }} .
 
       - name: Docker Login
         run: echo ${{ secrets.DOCKER_PASS }} | docker login -u ${{ secrets.DOCKER_USER }} --password-stdin
 
       - name: Docker Push
-        run: docker push ${{ secrets.DOCKER_USER }}/dovops-node-starter:${{ github.sha }}
+        run: docker push ${{ secrets.DOCKER_USER }}/devops-node-starter:${{ github.sha }}
 
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+
+    steps:
       - name: Deploy over SSH
         uses: appleboy/ssh-action@v0.1.6
         with:
